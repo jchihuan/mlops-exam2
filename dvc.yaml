@@ -1,0 +1,33 @@
+stages:
+  prepare:
+    cmd: python src/preprocessing.py data/raw data/ 
+          --model-name ${prepare.model-name} 
+          --type-work ${prepare.type-work} 
+    deps:
+      - src/preprocessing.py
+      - data/raw
+    params:
+      - prepare.model-name
+      - prepare.type-work
+    outs:
+      - data/training_data/
+  train:
+    cmd: python src/training.py models/
+          --train-path ${train.train-path}
+          --test-path ${train.test-path}
+    deps:
+      - src/training.py
+      - ${train.train-path}
+      - ${train.test-path}
+    outs:
+      - models/
+  inference:
+    cmd: python src/inference.py data/new data/predictions
+          --model-path ${inference.model-path}
+          --period ${inference.period}
+    deps:
+      - src/inference.py
+      - data/new
+      - ${inference.model-path}
+    outs:
+      - data/predictions

@@ -1,0 +1,71 @@
+schema: '2.0'
+stages:
+  prepare:
+    cmd: python src/preprocessing.py data/raw data/ --model-name mlops 
+      --type-work training
+    deps:
+    - path: data/raw
+      hash: md5
+      md5: 49e412bc31135d341a277261b80fbb82.dir
+      size: 1726132795
+      nfiles: 14
+    - path: src/preprocessing.py
+      hash: md5
+      md5: 310dc992b21ccb4a0e223a131cd746e9
+      size: 8148
+    params:
+      params.yaml:
+        prepare.model-name: mlops
+        prepare.type-work: training
+    outs:
+    - path: data/training_data/
+      hash: md5
+      md5: 6f342bcd1634386a3f7bd1aa5195ed16.dir
+      size: 1900255204
+      nfiles: 4
+  train:
+    cmd: python src/training.py models/ --train-path 
+      data/training_data/preprocessed/train_vars_mlops.csv --test-path 
+      data/training_data/preprocessed/test_vars_mlops.csv
+    deps:
+    - path: data/training_data/preprocessed/test_vars_mlops.csv
+      hash: md5
+      md5: 71ab60554fe37678f5a8da04fb7ffda0
+      size: 481136002
+    - path: data/training_data/preprocessed/train_vars_mlops.csv
+      hash: md5
+      md5: 86e324a717e0386f8881eafa1f3dd5a8
+      size: 976913004
+    - path: src/training.py
+      hash: md5
+      md5: 3b713c146c4f5f49c0f9c6eb7f2933c7
+      size: 6960
+    outs:
+    - path: models/
+      hash: md5
+      md5: 7c31be768249eec7ae845a45239ab9b4.dir
+      size: 12820417
+      nfiles: 3
+  inference:
+    cmd: python src/inference.py data/new data/predictions --model-path 
+      models/2025-11-30_00-01-43/catb_model.pkl --period 15
+    deps:
+    - path: data/new
+      hash: md5
+      md5: aa67820c42095c66e5fc5a5547f9fafb.dir
+      size: 3211
+      nfiles: 1
+    - path: models/2025-11-30_00-01-43/catb_model.pkl
+      hash: md5
+      md5: d568600db65458524f53ad594be0be5f
+      size: 12818642
+    - path: src/inference.py
+      hash: md5
+      md5: 6f98ef91b1a1fb2da7be094bf8418396
+      size: 2401
+    outs:
+    - path: data/predictions
+      hash: md5
+      md5: a48cb6784b5a851d0f744654c6bc983d.dir
+      size: 3675
+      nfiles: 1

@@ -170,6 +170,10 @@ def train(train_path, test_path, model_save_dir):
             best_ml_name = ml_name
 
     if best_ml_name:
+        feature_names = list(X_train.columns)
+        with open(f"{model_save_dir}/feature_names.json", "w") as f:
+            json.dump(feature_names, f)
+
         print(f"\nModelo finalista: {best_ml_name}")
         save_model(models[best_ml_name]['model'], best_ml_name, models[best_ml_name]['performance'], models[best_ml_name]['params'], model_save_dir)
     else:

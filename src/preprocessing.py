@@ -5,6 +5,7 @@ import dask.dataframe as dd
 from sklearn.model_selection import train_test_split
 from prefect import flow
 import argparse
+import os
 
 # ======================
 # LEER VARIABLES CRUDAS
@@ -145,10 +146,14 @@ def save_outputs(df, period, model, DIR_PROCESSED, type_work):
         DIR_PROCESSED = DIR_PROCESSED + '/training_data'
 
     for prefix, x, y in datasets:
-        path = f'{DIR_PROCESSED}/preprocessed/{prefix}vars_{period}{model}.csv'
+        dir = f'{DIR_PROCESSED}/preprocessed'
+        os.makedirs(dir, exist_ok=True)
+        path = f'{dir}/{prefix}vars_{period}{model}.csv'
         pd.concat([y, x[cols_vars]], axis=1).to_csv(path, index=False)
 
-        path = f'{DIR_PROCESSED}/postprocessed/{prefix}post_{period}{model}.csv'
+        dir = f'{DIR_PROCESSED}/postprocessed'
+        os.makedirs(dir, exist_ok=True)
+        path = f'{dir}/{prefix}post_{period}{model}.csv'
         x[cols_post].to_csv(path, index=False)
 
 if __name__ == "__main__":

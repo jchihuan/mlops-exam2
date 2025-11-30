@@ -1,0 +1,9 @@
+prepare:
+  model-name: "mlops"
+  type-work: "training"
+train:
+  train-path: data/training_data/preprocessed/train_vars_mlops.csv
+  test-path: data/training_data/preprocessed/test_vars_mlops.csv
+inference:
+  model-path: models/2025-11-30_00-01-43/catb_model.pkl
+  period: "15"

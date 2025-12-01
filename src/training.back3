@@ -25,12 +25,16 @@ matplotlib.use("Agg")
 
 # Configuración de MLflow
 mlflow.set_tracking_uri("http://ec2-52-14-97-223.us-east-2.compute.amazonaws.com:5000")
-mlflow.set_experiment("mlops-exam2-v4")
+mlflow.set_experiment("mlops-exam2-v1")
 
-# -----------------
-# PREPROCESAMIENTO
-# -----------------
+
+# ==============================
+#  PREPROCESAMIENTO
+# ==============================
 def preprocess_dataframe(df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Normaliza tipos: bool -> int, ints a int, floats a float con 4 decimales.
+    """
     for col in df.columns:
         if df[col].dtype == "bool":
             df[col] = df[col].astype(int)
@@ -40,7 +44,15 @@ def preprocess_dataframe(df: pd.DataFrame) -> pd.DataFrame:
             df[col] = df[col].astype(float).round(4)
     return df
 
+
+# ======================================
+#  GUARDAR MODELO (CON PREFECT OPCIONAL)
+# ======================================
 def save_model(model, ml_name, performance, params, save_dir):
+    """
+    Guarda modelo en .pkl y metadata en .json.
+    No usa MLflow dentro, solo archivos locales.
+    """
     os.makedirs(save_dir, exist_ok=True)
 
     # Guardar modelo
@@ -55,23 +67,23 @@ def save_model(model, ml_name, performance, params, save_dir):
     metadata_path = os.path.join(save_dir, metadata_filename)
 
     library_versions = {
-            "xgboost": xgb.__version__ if ml_name == "xgb" else None,
-            "lightgbm": lgb.__version__ if ml_name == "lgbm" else None,
-            "catboost": catb.__version__ if ml_name == "catb" else None,
-            "pandas": pd.__version__,
-            "numpy": np.__version__,
-            "scikit-learn": sklearn.__version__,
-            "python_platform": platform.platform(),
-        }
+        "xgboost": xgb.__version__ if ml_name == "xgb" else None,
+        "lightgbm": lgb.__version__ if ml_name == "lgbm" else None,
+        "catboost": catb.__version__ if ml_name == "catb" else None,
+        "pandas": pd.__version__,
+        "numpy": np.__version__,
+        "scikit-learn": sklearn.__version__,
+        "python_platform": platform.platform(),
+    }
 
     metadata = {
-            "ml_name": ml_name,
-            "performance": performance,
-            "hyperparameters": params,
-            "library_versions": library_versions,
-            "timestamp": time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()),
-        }
-    
+        "ml_name": ml_name,
+        "performance": performance,
+        "hyperparameters": params,
+        "library_versions": library_versions,
+        "timestamp": time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()),
+    }
+
     # Asegurar que los parámetros sean JSON-serializables
     def clean_params(p):
         cleaned = {}
@@ -90,9 +102,10 @@ def save_model(model, ml_name, performance, params, save_dir):
 
     print(f"Metadata guardada en: {metadata_path}")
 
-# -------
-# TRAIN
-# -------
+
+# ===========================
+#       TRAIN
+# ===========================
 def train(train_path: str, test_path: str, model_save_dir: str):
     # Carpeta con timestamp para este entrenamiento
     now = datetime.now()
@@ -101,7 +114,9 @@ def train(train_path: str, test_path: str, model_save_dir: str):
     os.makedirs(model_save_dir, exist_ok=True)
     print(f"Directorio de modelos guardado en: {model_save_dir}")
 
+    # -------------------------
     # 1. Cargar datos (una sola vez)
+    # -------------------------
     train_df = pd.read_csv(train_path)
     test_df = pd.read_csv(test_path)
 
@@ -109,7 +124,9 @@ def train(train_path: str, test_path: str, model_save_dir: str):
     train_df = preprocess_dataframe(train_df)
     test_df = preprocess_dataframe(test_df)
 
+    # -------------------------
     # 2. Split X / y
+    # -------------------------
     target_col = train_df.columns[0]
 
     X_train = train_df.drop(columns=[target_col])
@@ -118,7 +135,9 @@ def train(train_path: str, test_path: str, model_save_dir: str):
     X_test = test_df.drop(columns=[target_col])
     y_test = test_df[target_col]
 
+    # -------------------------
     # 3. Alinear columnas
+    # -------------------------
     train_cols = list(X_train.columns)
     test_cols = list(X_test.columns)
 
@@ -136,12 +155,14 @@ def train(train_path: str, test_path: str, model_save_dir: str):
     X_test = X_test[X_train.columns]
     feature_names = list(X_train.columns)
 
+    # -------------------------
     # 4. Definir modelos
+    # -------------------------
     models = {
-            "xgb": xgb.XGBClassifier(eval_metric="logloss", random_state=42),
-            "lgbm": lgb.LGBMClassifier(random_state=42),
-            "catb": catb.CatBoostClassifier(verbose=0, random_state=42),
-        }
+        "xgb": xgb.XGBClassifier(eval_metric="logloss", random_state=42),
+        "lgbm": lgb.LGBMClassifier(random_state=42),
+        "catb": catb.CatBoostClassifier(verbose=0, random_state=42),
+    }
 
     best_ml_name = None
     best_model = None
@@ -152,11 +173,15 @@ def train(train_path: str, test_path: str, model_save_dir: str):
     best_run_id = None
     best_artifact_uri = None
 
+    # -------------------------
     # 5. Entrenar cada modelo
+    #    -> UN RUN DE MLFLOW POR MODELO
+    # -------------------------
     for ml_name, model in models.items():
         print(f"\n=== Entrenando modelo: {ml_name} ===")
 
-        with mlflow.start_run(run_name=f"{ml_name}"):
+        with mlflow.start_run(run_name=f"{ml_name}_run"):
+            # Log de info global del dataset (se repite en cada run)
             mlflow.log_param("ml_name", ml_name)
             mlflow.log_param("train_file", train_path)
             mlflow.log_param("test_file", test_path)
@@ -196,9 +221,9 @@ def train(train_path: str, test_path: str, model_save_dir: str):
             print(f"  Tiempo entrenamiento: {train_time:.2f} s")
 
             # Log de métricas (un run por modelo)
-            mlflow.log_metric("auc_train", auc_train) # type: ignore
-            mlflow.log_metric("auc_test", auc_test) # type: ignore
-            mlflow.log_metric("decay_percent", decay) # type: ignore
+            mlflow.log_metric("auc_train", auc_train)
+            mlflow.log_metric("auc_test", auc_test)
+            mlflow.log_metric("decay_percent", decay)
             mlflow.log_metric("training_time_secs", train_time)
 
             # Log de hiperparámetros del modelo
@@ -214,30 +239,30 @@ def train(train_path: str, test_path: str, model_save_dir: str):
 
             # Log del modelo en este run (artefacto "model")
             if ml_name == "xgb":
-                mlflow.xgboost.log_model( # type: ignore
+                mlflow.xgboost.log_model(
                     xgb_model=model,
-                    name="model",
+                    artifact_path="model",
                 )
             elif ml_name == "lgbm":
-                mlflow.lightgbm.log_model( # type: ignore
+                mlflow.lightgbm.log_model(
                     lgb_model=model,
-                    name="model",
+                    artifact_path="model",
                 )
             elif ml_name == "catb":
-                mlflow.catboost.log_model( # type: ignore
+                mlflow.catboost.log_model(
                     cb_model=model,
-                    name="model",
+                    artifact_path="model",
                 )
             else:
-                mlflow.sklearn.log_model( # type: ignore
+                mlflow.sklearn.log_model(
                     sk_model=model,
-                    name="model"
+                    artifact_path="model",
                 )
 
             # Guardar info del run actual
-            current_run = mlflow.active_run()            
-            current_run_id = current_run.info.run_id # type: ignore
-            current_artifact_uri = current_run.info.artifact_uri # type: ignore
+            current_run = mlflow.active_run()
+            current_run_id = current_run.info.run_id
+            current_artifact_uri = current_run.info.artifact_uri
 
             # Selección del campeón (mejor AUC Test con decay < 10%)
             if (auc_test > best_auc_test) and (decay < 10):
@@ -250,7 +275,9 @@ def train(train_path: str, test_path: str, model_save_dir: str):
                 best_run_id = current_run_id
                 best_artifact_uri = current_artifact_uri
 
+    # -------------------------
     # 6. Guardar modelo campeón localmente
+    # -------------------------
     if best_model is None:
         print("\nNo se encontró ningún modelo campeón con decay < 10%.")
         return
@@ -274,7 +301,10 @@ def train(train_path: str, test_path: str, model_save_dir: str):
         save_dir=model_save_dir,
     )
 
+    # -------------------------
     # 7. Registrar campeón en el Model Registry
+    #    (sin crear nuevos runs)
+    # -------------------------
     if best_run_id is not None and best_artifact_uri is not None:
         client = MlflowClient()
 
@@ -294,6 +324,10 @@ def train(train_path: str, test_path: str, model_save_dir: str):
         )
         print("Modelo campeón registrado en MLflow Model Registry como 'modelo_campeon'.")
 
+
+# ===========================
+#   MAIN (PARA USAR CON DVC)
+# ===========================
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("output", type=str)

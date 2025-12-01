@@ -1,0 +1,60 @@
+(mlops_exam2) PS C:\Migrations\maestria\courses_IV\mlops\Exam2\mlops-exam2> dvc repro train
+Stage 'prepare' didn't change, skipping
+Running stage 'train':
+> python src/training.py models/ --train-path data/training_data/preprocessed/train_vars_mlops.csv --test-path data/training_data/preprocessed/test_vars_mlops.csv
+2025/12/01 17:29:25 INFO mlflow.tracking.fluent: Experiment with name 'mlops-exam2-v4' does not exist. Creating a new experiment.
+Directorio de modelos guardado en: models/2025-12-01_17-29-26
+
+=== Entrenando modelo: xgb ===
+  AUC Train: 0.8730
+  AUC Test:  0.8555
+  Decay:     2.01%
+  Tiempo entrenamiento: 25.23 s
+2025/12/01 17:30:33 WARNING mlflow.models.model: Model logged without a signature and input example. Please set `input_example` parameter when logging the model to auto infer the model signature.
+🏃 View run xgb at: http://ec2-52-14-97-223.us-east-2.compute.amazonaws.com:5000/#/experiments/870954742885515685/runs/ad626c9915c649d2bdcca7a507fa8ec9
+🧪 View experiment at: http://ec2-52-14-97-223.us-east-2.compute.amazonaws.com:5000/#/experiments/870954742885515685
+
+=== Entrenando modelo: lgbm ===
+[LightGBM] [Info] Number of positive: 96652, number of negative: 2705269
+[LightGBM] [Info] Auto-choosing row-wise multi-threading, the overhead of testing was 0.251560 seconds.
+You can set `force_row_wise=true` to remove the overhead.
+And if memory is not enough, you can set `force_col_wise=true`.
+[LightGBM] [Info] Total Bins 9395
+[LightGBM] [Info] Number of data points in the train set: 2801921, number of used features: 60
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.034495 -> initscore=-3.331840
+[LightGBM] [Info] Start training from score -3.331840
+  AUC Train: 0.8604
+  AUC Test:  0.8553
+  Decay:     0.60%
+  Tiempo entrenamiento: 26.57 s
+2025/12/01 17:31:23 WARNING mlflow.models.model: Model logged without a signature and input example. Please set `input_example` parameter when logging the model to auto infer the model signature.
+🏃 View run lgbm at: http://ec2-52-14-97-223.us-east-2.compute.amazonaws.com:5000/#/experiments/870954742885515685/runs/94dc82257ec445e580f68d65f25f0708
+🧪 View experiment at: http://ec2-52-14-97-223.us-east-2.compute.amazonaws.com:5000/#/experiments/870954742885515685
+
+=== Entrenando modelo: catb ===
+  AUC Train: 0.8627
+  AUC Test:  0.8566
+  Decay:     0.71%
+  Tiempo entrenamiento: 218.11 s
+2025/12/01 17:35:20 WARNING mlflow.models.model: Model logged without a signature and input example. Please set `input_example` parameter when logging the model to auto infer the model signature.
+🏃 View run catb at: http://ec2-52-14-97-223.us-east-2.compute.amazonaws.com:5000/#/experiments/870954742885515685/runs/94234c5b2ba34028b13d6aa4848f0d96
+🧪 View experiment at: http://ec2-52-14-97-223.us-east-2.compute.amazonaws.com:5000/#/experiments/870954742885515685
+
+Modelo campeón: catb
+  AUC Test campeón: 0.8566
+  Decay campeón:    0.71%
+  Run ID campeón:   94234c5b2ba34028b13d6aa4848f0d96
+Modelo guardado en: models/2025-12-01_17-29-26\catb_model.pkl
+Metadata guardada en: models/2025-12-01_17-29-26\catb_metadata.json
+2025/12/01 17:35:25 INFO mlflow.store.model_registry.abstract_store: Waiting up to 300 seconds for model version to finish creation. Model name: modelo_campeon, version 1
+Modelo campeón registrado en MLflow Model Registry como 'modelo_campeon'.
+Updating lock file 'dvc.lock'
+
+To track the changes with git, run:
+
+        git add dvc.lock
+
+To enable auto staging, run:
+
+        dvc config core.autostage true
+Use `dvc push` to send your updates to remote storage.

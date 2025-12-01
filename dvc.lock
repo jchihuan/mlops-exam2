@@ -38,13 +38,13 @@ stages:
       size: 976913004
     - path: src/training.py
       hash: md5
-      md5: 3b713c146c4f5f49c0f9c6eb7f2933c7
-      size: 6960
+      md5: 8bf28a49ab25f48b623225cdd957ae46
+      size: 10725
     outs:
     - path: models/
       hash: md5
-      md5: 7c31be768249eec7ae845a45239ab9b4.dir
-      size: 12820417
+      md5: e0f1c745ae188e5c2fdecf08fdfc1c1d.dir
+      size: 12820773
       nfiles: 3
   inference:
     cmd: python src/inference.py data/new data/predictions --model-path 

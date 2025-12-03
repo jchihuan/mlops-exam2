@@ -24,8 +24,8 @@ import matplotlib
 matplotlib.use("Agg")
 
 # Configuración de MLflow
-mlflow.set_tracking_uri("http://ec2-52-14-97-223.us-east-2.compute.amazonaws.com:5000")
-mlflow.set_experiment("mlops-exam2-v4")
+mlflow.set_tracking_uri("http://ec2-3-14-12-129.us-east-2.compute.amazonaws.com:5000")
+mlflow.set_experiment("mlops-exam2-v5")
 
 # -----------------
 # PREPROCESAMIENTO

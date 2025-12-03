@@ -3,14 +3,12 @@ import numpy as np
 import pandas as pd
 import dask.dataframe as dd
 from sklearn.model_selection import train_test_split
-from prefect import flow
 import argparse
 import os
 
 # ======================
 # LEER VARIABLES CRUDAS
 # ======================
-@flow
 def read_rawdata(period, type_work, DIR_RAWDATA):
     if type_work == 'training':
         csv_files = glob.glob(f'{DIR_RAWDATA}/*.csv')
@@ -42,7 +40,6 @@ def read_rawdata(period, type_work, DIR_RAWDATA):
 # ==================
 # PROCESAR VARIABLES
 # ==================
-@flow
 def one_hot_encoding(df, col, categories=None):
     selected_col = df[col]
 
@@ -55,7 +52,6 @@ def one_hot_encoding(df, col, categories=None):
 
     return df, new_cols
 
-@flow
 def process_vars(df):
     variables_categoricas = ['ent_1erlntcrallsfm01']
     variables_numericas = ['nro_producto_6m', 'prom_uso_tc_rccsf3m', 'ctd_sms_received',
@@ -105,7 +101,6 @@ def process_vars(df):
 # ========================
 # GUARDAR SALIDAS DEL JOB
 # ========================
-@flow
 def save_outputs(df, period, model, DIR_PROCESSED, type_work):
     col_target = 'target'
     cols_post = ['partition', 'key_value', 'codunicocli', 'grp_campecs06m', 'prob_value_contact', 'monto']

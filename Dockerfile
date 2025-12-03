@@ -19,7 +19,7 @@ RUN pip install --no-cache-dir --no-compile -r requirements.txt
 
 # Copiar solo el código necesario
 COPY src/ src/
-COPY models/2025-12-01_17-29-26 models/
+COPY models/best models/
 
 EXPOSE 8000
 

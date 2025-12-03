@@ -1,0 +1,23 @@
+{
+    "ml_name": "catb",
+    "performance": {
+        "auc_train": 0.8627456792845501,
+        "auc_test": 0.8565944889635984,
+        "decay_percent": 0.7129783977652367,
+        "training_time_secs": 218.11134600639343
+    },
+    "hyperparameters": {
+        "verbose": 0,
+        "random_state": 42
+    },
+    "library_versions": {
+        "xgboost": null,
+        "lightgbm": null,
+        "catboost": "1.2.8",
+        "pandas": "2.2.2",
+        "numpy": "1.26.4",
+        "scikit-learn": "1.5.1",
+        "python_platform": "Windows-11-10.0.26200-SP0"
+    },
+    "timestamp": "2025-12-01 17:35:25"
+}

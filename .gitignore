@@ -1,4 +1,3 @@
 .dvc/config.local
 notes.txt
-/models
 /catboost_info

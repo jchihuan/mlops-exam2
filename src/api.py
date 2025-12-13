@@ -1,4 +1,4 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 import uvicorn
 import pickle
 import json
@@ -8,7 +8,9 @@ from preprocessing_vars import process_vars
 
 app = FastAPI(title="MLOps")
 
-# MODEL_DIR = "models/2025-12-01_17-29-26"
+# -----------------------------
+#   Carga de modelo y metadata
+# -----------------------------
 MODEL_DIR = "models"
 MODEL_PATH = os.path.join(MODEL_DIR, "catb_model.pkl")
 FEATURES_PATH = os.path.join(MODEL_DIR, "feature_names.json")
@@ -19,9 +21,9 @@ with open(MODEL_PATH, "rb") as f:
 with open(FEATURES_PATH, "r") as f:
     feature_names = json.load(f)
 
-# -----------
-# Inferencia
-# -----------
+# ------------------------
+#   Lógica de predicción
+# ------------------------
 def predict_record(record: dict):
     df = pd.DataFrame([record])
 
@@ -42,21 +44,47 @@ def predict_record(record: dict):
         "pred_proba": float(pred_proba)
     }
 
-# -------------
-# Endpoint API
-# -------------
-@app.post("/predict")
-async def predict_endpoint(payload: dict):
-    try:
-        result = predict_record(payload)
-        return result
-    except Exception as e:
-        return {"error": str(e)}
 
-@app.get("/health")
-def health():
+# ------------------------------
+#     ENDPOINTS PARA SAGEMAKER
+# ------------------------------
+
+# Health check requerido por SageMaker
+@app.get("/ping")
+def ping():
     return {"status": "ok"}
 
-# Asynchronous Server Gateway Interface
+# Endpoint de inferencia requerido por SageMaker
+@app.post("/invocations")
+async def invoke(request: Request):
+    """
+    SageMaker envía un JSON:
+      {"inputs": {...registro...}}
+    o en batch:
+      {"inputs": [ {record1}, {record2} ]}
+    """
+    payload = await request.json()
+
+    # Aceptamos un solo registro o múltiples
+    inputs = payload.get("inputs")
+
+    print("MLOps ver 1.0.0")
+    print(inputs)
+
+    if isinstance(inputs, dict):
+        # caso: un solo registro
+        return predict_record(inputs)
+
+    elif isinstance(inputs, list):
+        # caso: múltiples registros
+        return [predict_record(rec) for rec in inputs]
+
+    else:
+        return {"error": "Formato inválido. Debe contener 'inputs'."}
+
+# ----------------------
+# Arranque del servidor
+# ----------------------
 if __name__ == "__main__":
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    port = int(os.environ.get("PORT", 8080))  # SageMaker usa PORT
+    uvicorn.run(app, host="0.0.0.0", port=port)
